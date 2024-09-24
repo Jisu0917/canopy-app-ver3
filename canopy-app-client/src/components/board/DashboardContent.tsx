@@ -1,19 +1,27 @@
-import React from "react";
+import React, { useEffect } from "react";
 import MapContainer from "./MapContainer";
 import TableContainer from "./TableContainer";
-import { CanopyData } from "@/types/models";
+import { CanopyModel } from "@/types/models";
 
 interface DashboardContentProps {
-  dashboardData: CanopyData[];
-  onControlChange: (id: number, control: string, value: boolean) => void;
+  dashboardData: CanopyModel[];
+  onControlChange: (
+    id: number,
+    control: string,
+    value: boolean
+  ) => Promise<boolean>;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
   dashboardData,
   onControlChange,
 }) => {
+  useEffect(() => {
+    console.log("DashboardContent dashboardData:", dashboardData);
+  }, [dashboardData]);
+
   return (
-    <div className="flex space-x-6">
+    <div className="flex flex-row px-10 py-6">
       <div className="w-2/5">
         <MapContainer data={dashboardData} />
       </div>

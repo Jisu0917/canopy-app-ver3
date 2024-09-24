@@ -77,6 +77,12 @@ io.on("connection", (socket) => {
       command: message.command,
       value: message.value,
     });
+
+    // 명령을 전송한 후 즉시 임시 응답
+    socket.emit("commandResult", {
+      success: true,
+      message: "Command sent successfully",
+    });
   });
 
   socket.on("clientInfo", async (message) => {
@@ -86,7 +92,7 @@ io.on("connection", (socket) => {
       if (message.content === "temperature") {
         await prisma.canopy.update({
           where: { id: canopy_id },
-          data: { status_temperature: message.content_value as number },
+          data: { status_temperature: parseFloat(message.content_value) },
         });
       } else if (message.content === "command_result") {
         const { device, state, result } = message.content_value;
@@ -96,10 +102,21 @@ io.on("connection", (socket) => {
           where: { id: canopy_id },
           data: updateData,
         });
+
+        // 명령 실행 결과를 클라이언트에게 전송
+        io.to(serialNumber).emit("commandResult", {
+          success: result,
+          message: `Command ${device} ${state} executed ${result ? "successfully" : "with failure"}`,
+        });
       }
       debug("Data saved successfully");
     } catch (err) {
       console.error("Error saving data:", err);
+      // 에러 발생 시 클라이언트에게 실패 메시지
+      io.to(serialNumber).emit("commandResult", {
+        success: false,
+        message: "Error processing command result",
+      });
     }
   });
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Prisma } from "@prisma/client";
 import React from "react";
@@ -17,7 +16,7 @@ export type Model<T> = BaseModel & {
 };
 
 // Admin 데이터 타입 정의
-export type AdminData = Prisma.AdminGetPayload<{}>;
+export type AdminData = Prisma.AdminGetPayload<object>;
 
 // AdminModel 타입 정의
 export interface AdminModel extends BaseModel {
@@ -25,9 +24,9 @@ export interface AdminModel extends BaseModel {
 }
 
 // Buyer 데이터 타입 정의
-export type BuyerData = Prisma.BuyerGetPayload<{}> & {
-  canopies?: Prisma.CanopyGetPayload<{}>[] | null;
-  controls?: Prisma.ControlGetPayload<{}>[] | null;
+export type BuyerData = Prisma.BuyerGetPayload<object> & {
+  canopies?: Prisma.CanopyGetPayload<object>[] | null;
+  controls?: Prisma.ControlGetPayload<object>[] | null;
 };
 
 // BuyerModel 타입 정의
@@ -36,8 +35,8 @@ export interface BuyerModel extends BaseModel {
 }
 
 // Location 데이터 타입 정의
-export type LocationData = Prisma.LocationGetPayload<{}> & {
-  canopies?: Prisma.CanopyGetPayload<{}>[] | null;
+export type LocationData = Prisma.LocationGetPayload<object> & {
+  canopies?: Prisma.CanopyGetPayload<object>[] | null;
 };
 
 // LocationModel 타입 정의
@@ -46,10 +45,10 @@ export interface LocationModel extends BaseModel {
 }
 
 // Canopy 데이터 타입 정의
-export type CanopyData = Prisma.CanopyGetPayload<{}> & {
-  location?: Prisma.LocationGetPayload<{}> | null;
-  buyer?: Prisma.BuyerGetPayload<{}> | null;
-  controls?: Prisma.ControlGetPayload<{}>[] | null;
+export type CanopyData = Prisma.CanopyGetPayload<object> & {
+  location?: Prisma.LocationGetPayload<object> | null;
+  buyer?: Prisma.BuyerGetPayload<object> | null;
+  controls?: Prisma.ControlGetPayload<object>[] | null;
 };
 
 // CanopyModel 타입 정의
@@ -58,9 +57,9 @@ export interface CanopyModel extends BaseModel {
 }
 
 // Control 데이터 타입 정의
-export type ControlData = Prisma.ControlGetPayload<{}> & {
-  canopy?: Prisma.CanopyGetPayload<{}> | null;
-  buyer?: Prisma.BuyerGetPayload<{}> | null;
+export type ControlData = Prisma.ControlGetPayload<object> & {
+  canopy?: Prisma.CanopyGetPayload<object> | null;
+  buyer?: Prisma.BuyerGetPayload<object> | null;
 };
 
 // ControlModel 타입 정의

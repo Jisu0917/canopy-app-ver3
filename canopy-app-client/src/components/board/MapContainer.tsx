@@ -75,7 +75,7 @@ const MapContainer: React.FC<MapContainerProps> = ({ data }) => {
     });
   };
 
-  return <div ref={mapRef} className="w-full h-[485px]" />;
+  return <div ref={mapRef} className="w-full h-[580px]" />;
 };
 
 export default MapContainer;

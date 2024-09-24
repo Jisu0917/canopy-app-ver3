@@ -45,6 +45,7 @@ export interface PrivateMessage {
 
 export interface CommandMessage {
   type: "command";
+  targetSerial: string;
   senderSerial: string;
   command: string;
   value: string;

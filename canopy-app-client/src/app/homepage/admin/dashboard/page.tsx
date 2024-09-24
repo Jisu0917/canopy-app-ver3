@@ -4,17 +4,18 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/board/DashboardLayout";
 import DashboardContent from "@/components/board/DashboardContent";
-import useWebSocket from "@/hooks/useSocketIO";
-import { CanopyData } from "@/types/models";
+import useSocketIO from "@/hooks/useSocketIO";
+import { CanopyModel } from "@/types/models";
 
 const AdminDashboard: React.FC = () => {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
-  const { sendControlCommand, isLoading, error } = useWebSocket(
-    "admin",
-    userId
-  );
-  const [canopies, setCanopies] = useState<CanopyData[]>([]);
+  const {
+    sendControlCommand: socketSendControlCommand,
+    isLoading,
+    error,
+  } = useSocketIO("admin", userId);
+  const [canopies, setCanopies] = useState<CanopyModel[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchUserId = useCallback(async () => {
@@ -42,7 +43,8 @@ const AdminDashboard: React.FC = () => {
         throw new Error("Failed to fetch canopy data");
       }
       const result = await response.json();
-      setCanopies(result.data);
+      console.log("Fetched canopy data:", result.data); // 디버깅을 위한 로그
+      setCanopies(result.data); // 서버에서 받은 데이터 구조를 그대로 사용
     } catch (error) {
       console.error("Error fetching model data:", error);
       setFetchError("Failed to load canopy data. Please refresh the page.");
@@ -58,6 +60,35 @@ const AdminDashboard: React.FC = () => {
       fetchModels();
     }
   }, [userId, fetchModels]);
+
+  const handleControlChange = useCallback(
+    async (id: number, control: string, value: boolean) => {
+      try {
+        const success = await socketSendControlCommand(id, control, value);
+        if (success) {
+          setCanopies((prevCanopies) =>
+            prevCanopies.map((canopy) => {
+              if (canopy.data.id === id) {
+                return {
+                  ...canopy,
+                  data: {
+                    ...canopy.data,
+                    [`status_${control}`]: value,
+                  },
+                };
+              }
+              return canopy;
+            })
+          );
+        }
+        return success;
+      } catch (error) {
+        console.error("Control change error:", error);
+        return false;
+      }
+    },
+    [socketSendControlCommand]
+  );
 
   const handleLogout = async () => {
     if (confirm("로그아웃 하시겠습니까?")) {
@@ -97,7 +128,7 @@ const AdminDashboard: React.FC = () => {
       ) : (
         <DashboardContent
           dashboardData={canopies}
-          onControlChange={sendControlCommand}
+          onControlChange={handleControlChange}
         />
       )}
     </DashboardLayout>

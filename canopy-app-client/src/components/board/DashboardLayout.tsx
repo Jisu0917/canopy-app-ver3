@@ -38,7 +38,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         >
           나라장터
         </Link>
-        <Link href={`/${userType}/linking`} className="mx-6 text-gray-700">
+        <Link href={`/${userType}/control`} className="mx-6 text-gray-700">
           그늘막 연동
         </Link>
         <button

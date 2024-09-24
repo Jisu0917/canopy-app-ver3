@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback, useRef } from "react";
 import io, { Socket } from "socket.io-client";
-import { ConnectedMessage, CommandMessage } from "@/types/websocket";
+import { ConnectedMessage } from "@/types/websocket";
 
 const DEBUG = true;
 function debug(...args: any[]) {
@@ -79,22 +79,34 @@ const useSocketIO = (userType: "admin" | "buyer", userId: string | null) => {
   }, [userId, connectSocketIO]);
 
   const sendControlCommand = useCallback(
-    (id: number, control: string, value: boolean) => {
-      if (socket && socket.connected) {
-        const command: CommandMessage = {
-          type: "command",
-          senderSerial: `WEB_${userType.toUpperCase()}_${userId}`,
+    async (id: number, control: string, value: boolean): Promise<boolean> => {
+      if (!socket) {
+        console.error("Socket is not connected");
+        return false;
+      }
+
+      return new Promise((resolve) => {
+        socket.emit("command", {
+          targetSerial: `RASPBERRY_PI_${id}`,
           command: control,
           value: value ? "ON" : "OFF",
-        };
-        debug("Sending control command:", command);
-        socket.emit("command", command);
-      } else {
-        debug("Socket.IO is not connected. Unable to send command.");
-        setError("Socket.IO is not connected. Unable to send command.");
-      }
+        });
+
+        // 서버로부터의 응답을 기다립니다
+        socket.once(
+          "commandResult",
+          (result: { success: boolean | PromiseLike<boolean> }) => {
+            resolve(result.success);
+          }
+        );
+
+        // 5초 후에 타임아웃 처리
+        setTimeout(() => {
+          resolve(false);
+        }, 5000);
+      });
     },
-    [socket, userType, userId]
+    [socket]
   );
 
   return { sendControlCommand, isLoading, error };
