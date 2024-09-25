@@ -33,7 +33,7 @@ const TableContainer: React.FC<TableContainerProps> = ({
   }
 
   return (
-    <div className="overflow-x-auto bg-white p-4 h-[580px]">
+    <div className="overflow-x-auto bg-white p-4 h-[600px]">
       <table className="w-full text-base text-center text-gray-500">
         <thead className="text-center text-gray-500 uppercase bg-gray-100 font-semibold">
           <tr>
@@ -67,7 +67,7 @@ const TableContainer: React.FC<TableContainerProps> = ({
                     <span
                       className={`px-2 py-1 mr-4 inline-block w-20 text-center rounded-xl ${
                         canopy.status_fold
-                          ? "bg-blue-400 text-white"
+                          ? "bg-[#4dc1e9] text-white"
                           : canopy.status_transmit
                             ? "bg-gray-100 text-gray-800"
                             : "bg-red-600 text-white"
