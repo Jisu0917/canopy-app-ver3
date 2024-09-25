@@ -66,11 +66,11 @@ const TableContainer: React.FC<TableContainerProps> = ({
                   <td className="px-6 py-2">
                     <span
                       className={`px-2 py-1 mr-4 inline-block w-20 text-center rounded-xl ${
-                        canopy.status_fold
-                          ? "bg-[#4dc1e9] text-white"
-                          : canopy.status_transmit
-                            ? "bg-gray-100 text-gray-800"
-                            : "bg-red-600 text-white"
+                        !canopy.status_transmit
+                          ? "bg-red-600 text-white"
+                          : canopy.status_fold
+                            ? "bg-[#4dc1e9] text-white"
+                            : "bg-gray-100 text-gray-800"
                       }`}
                     >
                       {canopy.status_fold ? "펼쳐짐" : "접힘"}
@@ -105,8 +105,8 @@ const TableContainer: React.FC<TableContainerProps> = ({
                             : ControlOff.src
                         }
                         alt="Control"
-                        width={24}
-                        height={24}
+                        width={28}
+                        height={28}
                       />
                     </button>
                   </td>
