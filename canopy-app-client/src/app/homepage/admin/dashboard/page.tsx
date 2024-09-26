@@ -129,6 +129,7 @@ const AdminDashboard: React.FC = () => {
         <DashboardContent
           dashboardData={canopies}
           onControlChange={handleControlChange}
+          userId={userId}
         />
       )}
     </DashboardLayout>

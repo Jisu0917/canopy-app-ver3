@@ -12,12 +12,10 @@ interface TableContainerProps {
     control: string,
     value: boolean
   ) => Promise<boolean>;
+  userId: string;
 }
 
-const TableContainer: React.FC<TableContainerProps> = ({
-  data,
-  onControlChange,
-}) => {
+const TableContainer: React.FC<TableContainerProps> = ({ data, userId }) => {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -118,7 +116,7 @@ const TableContainer: React.FC<TableContainerProps> = ({
                       <ControlMenu
                         id={canopy.id}
                         status={canopy}
-                        onControlChange={onControlChange}
+                        userId={userId}
                       />
                     </td>
                   </tr>

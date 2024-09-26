@@ -10,11 +10,13 @@ interface DashboardContentProps {
     control: string,
     value: boolean
   ) => Promise<boolean>;
+  userId: string;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
   dashboardData,
   onControlChange,
+  userId,
 }) => {
   useEffect(() => {
     console.log("DashboardContent dashboardData:", dashboardData);
@@ -29,6 +31,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         <TableContainer
           data={dashboardData}
           onControlChange={onControlChange}
+          userId={userId}
         />
       </div>
     </div>

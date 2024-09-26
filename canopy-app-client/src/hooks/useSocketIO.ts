@@ -16,6 +16,9 @@ const useSocketIO = (userType: "admin" | "buyer", userId: string | null) => {
   const [socket, setSocket] = useState<typeof Socket | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [commandResults, setCommandResults] = useState<{
+    [key: string]: boolean | string;
+  }>({});
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const connectSocketIO = useCallback(() => {
@@ -26,6 +29,8 @@ const useSocketIO = (userType: "admin" | "buyer", userId: string | null) => {
 
     const serialNumber = `WEB_${userType.toUpperCase()}_${userId}`;
     const socketUrl = process.env.NEXT_PUBLIC_WS_URL || window.location.host;
+
+    debug(`Connecting to Socket.IO server at ${socketUrl}`);
 
     const newSocket = io(socketUrl, {
       query: { serialNumber },
@@ -54,6 +59,14 @@ const useSocketIO = (userType: "admin" | "buyer", userId: string | null) => {
       debug("Socket.IO error:", error);
       setError("Socket.IO connection error");
       setIsLoading(false);
+    });
+
+    newSocket.on("commandResult", (result: any) => {
+      debug("Received commandResult:", result);
+      setCommandResults((prev) => ({
+        ...prev,
+        [result.command]: result.value,
+      }));
     });
 
     setSocket(newSocket);
@@ -86,30 +99,44 @@ const useSocketIO = (userType: "admin" | "buyer", userId: string | null) => {
       }
 
       return new Promise((resolve) => {
-        socket.emit("command", {
+        const command = {
           targetSerial: `RASPBERRY_PI_${id}`,
           command: control,
           value: value ? "ON" : "OFF",
-        });
+        };
+        debug("Emitting command:", command);
+        socket.emit("command", command);
 
-        // 서버로부터의 응답을 기다립니다
-        socket.once(
-          "commandResult",
-          (result: { success: boolean | PromiseLike<boolean> }) => {
-            resolve(result.success);
-          }
-        );
-
-        // 5초 후에 타임아웃 처리
-        setTimeout(() => {
+        const timeout = setTimeout(() => {
+          debug("Command timed out");
           resolve(false);
         }, 5000);
+
+        const handleCommandResult = (result: any) => {
+          debug("Received command result:", result);
+          clearTimeout(timeout);
+          if (
+            result.command === control &&
+            result.targetSerial === `RASPBERRY_PI_${id}`
+          ) {
+            setCommandResults((prev) => ({
+              ...prev,
+              [result.command]: result.value,
+            }));
+            resolve(result.success);
+          } else {
+            debug("Received result for different command or target:", result);
+            resolve(false);
+          }
+        };
+
+        socket.once("commandResult", handleCommandResult);
       });
     },
     [socket]
   );
 
-  return { sendControlCommand, isLoading, error };
+  return { sendControlCommand, isLoading, error, commandResults };
 };
 
 export default useSocketIO;

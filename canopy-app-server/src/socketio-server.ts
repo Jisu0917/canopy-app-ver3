@@ -34,6 +34,25 @@ function debug(...args: any[]) {
   }
 }
 
+// 데이터베이스 연결 확인
+prisma
+  .$connect()
+  .then(() => console.log("Database connected successfully"))
+  .catch((err) => console.error("Database connection failed:", err));
+
+// 명령을 전달하는 함수
+function sendCommand(
+  targetSerial: string,
+  command: string,
+  value: string
+): void {
+  io.to(targetSerial).emit("command", {
+    command: command,
+    value: value,
+  });
+  debug(`Command sent to ${targetSerial}: ${command} ${value}`);
+}
+
 io.on("connection", (socket) => {
   debug("New client connected");
 
@@ -69,52 +88,64 @@ io.on("connection", (socket) => {
   });
 
   socket.on("command", (message) => {
-    debug(
-      `Command from ${serialNumber} to ${message.targetSerial}: ${message.command} ${message.value}`
-    );
-    io.to(message.targetSerial).emit("command", {
-      senderSerial: serialNumber,
-      command: message.command,
-      value: message.value,
-    });
+    debug(`Received command: ${JSON.stringify(message)}`);
 
-    // 명령을 전송한 후 즉시 임시 응답
-    socket.emit("commandResult", {
-      success: true,
-      message: "Command sent successfully",
-    });
+    // 명령을 대상 기기로 전송
+    sendCommand(message.targetSerial, message.command, message.value);
+
+    debug(`Sent command to target: ${message.targetSerial}`);
   });
 
   socket.on("clientInfo", async (message) => {
-    debug(`Client info from ${message.targetSerial}: ${message.content}`);
+    debug(
+      `Client info from ${message.targetSerial}: ${JSON.stringify(message)}`
+    );
     try {
       const canopy_id = parseInt(message.targetSerial.split("_")[2], 10);
       if (message.content === "temperature") {
+        const temperature = parseFloat(message.content_value as string);
+        debug(`Updating temperature for canopy ${canopy_id}: ${temperature}`);
         await prisma.canopy.update({
           where: { id: canopy_id },
-          data: { status_temperature: parseFloat(message.content_value) },
+          data: { status_temperature: temperature },
         });
+        debug(`Temperature updated successfully for canopy ${canopy_id}`);
       } else if (message.content === "command_result") {
-        const { device, state, result } = message.content_value;
+        const { device, state, result } = message.content_value as {
+          device: string;
+          state: string;
+          result: boolean;
+        };
         const updateData: any = {};
         updateData[`status_${device.toLowerCase()}`] = state === "ON";
+        debug(
+          `Updating control state for canopy ${canopy_id}: ${device} = ${state}`
+        );
         await prisma.canopy.update({
           where: { id: canopy_id },
           data: updateData,
         });
+        debug(`Control state updated successfully for canopy ${canopy_id}`);
 
-        // 명령 실행 결과를 클라이언트에게 전송
-        io.to(serialNumber).emit("commandResult", {
+        // 명령 실행 결과를 모든 클라이언트에게 전송
+        io.emit("commandResult", {
           success: result,
+          command: device,
+          value: state === "ON",
+          targetSerial: message.targetSerial,
           message: `Command ${device} ${state} executed ${result ? "successfully" : "with failure"}`,
         });
+        debug(
+          `Command result sent: ${JSON.stringify({ success: result, command: device, value: state === "ON", targetSerial: message.targetSerial })}`
+        );
       }
       debug("Data saved successfully");
     } catch (err) {
       console.error("Error saving data:", err);
-      // 에러 발생 시 클라이언트에게 실패 메시지
-      io.to(serialNumber).emit("commandResult", {
+      debug("Error details:", JSON.stringify(err, null, 2));
+      io.emit("commandResult", {
         success: false,
+        targetSerial: message.targetSerial,
         message: "Error processing command result",
       });
     }
