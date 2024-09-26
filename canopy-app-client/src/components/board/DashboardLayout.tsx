@@ -39,7 +39,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           나라장터
         </Link>
         <Link
-          href={`/${userType}/control`}
+          href={`/homepage/${userType}/control`}
           className="mx-6 text-gray-800 text-sm"
         >
           그늘막 연동
