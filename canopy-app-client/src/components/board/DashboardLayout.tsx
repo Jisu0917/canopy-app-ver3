@@ -48,7 +48,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           onClick={onLogout}
           className="ml-auto px-8 py-2 text-sm bg-[#4dc1e9] text-white rounded hover:opacity-80 transition-opacity"
         >
-          관리자 로그아웃
+          {userType === "admin" ? "관리자" : "구매자"} 로그아웃
         </button>
       </nav>
       <main className="flex-grow p-6">{children}</main>
