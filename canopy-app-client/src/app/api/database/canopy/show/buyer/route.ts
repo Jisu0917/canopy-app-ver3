@@ -1,5 +1,3 @@
-// 파일 위치: src/app/api/database/canopy/show/buyer/route.ts
-
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { CanopyModel } from "@/types/models";
