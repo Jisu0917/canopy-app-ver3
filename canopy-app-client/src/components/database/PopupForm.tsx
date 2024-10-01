@@ -104,29 +104,43 @@ const PopupForm = <T extends AnyModel>({
         );
       })}
 
-      {/* 연관 데이터 필드 */}
       {relatedFields &&
         Object.entries(relatedFields).map(
           ([key, { label, type, required }]) => {
-            const options = generateOptions(key);
-            const value = model.data
-              ? model.data[key as keyof AnyData]
-              : undefined;
+            if (type === "text") {
+              return (
+                <FormGroup
+                  key={key}
+                  label={label}
+                  id={key}
+                  name={key}
+                  type={type}
+                  onChange={onChange}
+                  required={required}
+                  placeholder={label}
+                />
+              );
+            } else {
+              const options = generateOptions(key);
+              const value = model.data
+                ? model.data[key as keyof AnyData]
+                : undefined;
 
-            return (
-              <FormGroup
-                key={key}
-                label={label}
-                id={key}
-                name={key}
-                value={value}
-                type={type}
-                options={options}
-                onChange={onChange}
-                required={required}
-                placeholder={`Select ${label}`}
-              />
-            );
+              return (
+                <FormGroup
+                  key={key}
+                  label={label}
+                  id={key}
+                  name={key}
+                  value={value}
+                  type={type}
+                  options={options}
+                  onChange={onChange}
+                  required={required}
+                  placeholder={`Select ${label}`}
+                />
+              );
+            }
           }
         )}
 

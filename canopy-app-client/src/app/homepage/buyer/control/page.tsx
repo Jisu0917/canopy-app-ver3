@@ -40,7 +40,7 @@ const BuyerControl: React.FC = () => {
 
     try {
       const response = await fetch(
-        `/api/database/canopy/show/buyer?buyerId=${userId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/database/canopy/show/buyer?buyerId=${userId}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch canopy data");

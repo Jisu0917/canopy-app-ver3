@@ -13,77 +13,79 @@ function debug(...args: any[]) {
 const RECONNECT_INTERVAL = 5000;
 
 const useSocketIO = (userType: "admin" | "buyer", userId: string | null) => {
-  const [socket, setSocket] = useState<typeof Socket | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [commandResults, setCommandResults] = useState<{
     [key: string]: boolean | string;
   }>({});
+  const socketRef = useRef<typeof Socket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const connectSocketIO = useCallback(() => {
-    if (!userId) {
-      debug("UserId not available, skipping Socket.IO connection");
+    if (!userId || !userType) {
+      debug("UserId or userType not available, skipping Socket.IO connection");
+      return;
+    }
+
+    if (socketRef.current?.connected) {
+      debug("Socket already connected, skipping connection");
       return;
     }
 
     const serialNumber = `WEB_${userType.toUpperCase()}_${userId}`;
-    const socketUrl = process.env.NEXT_PUBLIC_WS_URL || window.location.host;
+    const socketUrl = process.env.NEXT_PUBLIC_WS_URL || "localhost:5000";
 
     debug(`Connecting to Socket.IO server at ${socketUrl}`);
 
-    const newSocket = io(socketUrl, {
+    socketRef.current = io(socketUrl, {
       query: { serialNumber },
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: RECONNECT_INTERVAL,
     });
 
-    newSocket.on("connect", () => {
+    socketRef.current.on("connect", () => {
       debug("Socket.IO connected successfully");
       setIsLoading(false);
       setError(null);
     });
 
-    newSocket.on("connected", (message: ConnectedMessage) => {
+    socketRef.current.on("connected", (message: ConnectedMessage) => {
       debug("Connection confirmed:", message.content);
     });
 
-    newSocket.on("disconnect", (reason: string) => {
+    socketRef.current.on("disconnect", (reason: string) => {
       debug("Socket.IO disconnected:", reason);
       setError("Socket.IO connection closed");
       setIsLoading(false);
     });
 
-    newSocket.on("error", (error: Error) => {
+    socketRef.current.on("error", (error: Error) => {
       debug("Socket.IO error:", error);
       setError("Socket.IO connection error");
       setIsLoading(false);
     });
 
-    newSocket.on("commandResult", (result: any) => {
+    socketRef.current.on("commandResult", (result: any) => {
       debug("Received commandResult:", result);
       setCommandResults((prev) => ({
         ...prev,
         [result.command]: result.value,
       }));
     });
-
-    setSocket(newSocket);
-
-    return () => {
-      newSocket.disconnect();
-    };
   }, [userType, userId]);
 
   useEffect(() => {
     if (userId) {
       debug("Setting up Socket.IO connection");
-      const cleanup = connectSocketIO();
+      connectSocketIO();
 
       return () => {
         debug("Cleaning up Socket.IO connection");
-        if (cleanup) cleanup();
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+          socketRef.current = null;
+        }
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
         }
@@ -93,7 +95,7 @@ const useSocketIO = (userType: "admin" | "buyer", userId: string | null) => {
 
   const sendControlCommand = useCallback(
     async (id: number, control: string, value: boolean): Promise<boolean> => {
-      if (!socket) {
+      if (!socketRef.current) {
         console.error("Socket is not connected");
         return false;
       }
@@ -105,7 +107,7 @@ const useSocketIO = (userType: "admin" | "buyer", userId: string | null) => {
           value: value ? "ON" : "OFF",
         };
         debug("Emitting command:", command);
-        socket.emit("command", command);
+        socketRef.current?.emit("command", command);
 
         const timeout = setTimeout(() => {
           debug("Command timed out");
@@ -130,10 +132,10 @@ const useSocketIO = (userType: "admin" | "buyer", userId: string | null) => {
           }
         };
 
-        socket.once("commandResult", handleCommandResult);
+        socketRef.current?.once("commandResult", handleCommandResult);
       });
     },
-    [socket]
+    []
   );
 
   return { sendControlCommand, isLoading, error, commandResults };

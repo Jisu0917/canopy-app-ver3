@@ -41,8 +41,8 @@ const LocationPage: React.FC = () => {
   };
 
   const relatedFields = {
-    manage_number: { label: "관리 번호", type: "select", required: true },
-    class_number: { label: "구분 번호", type: "select", required: true },
+    manage_number: { label: "관리 번호", type: "text", required: true },
+    class_number: { label: "구분 번호", type: "text", required: true },
     buyer_id: { label: "구매자 ID", type: "select", required: true },
     region: { label: "관할 구역", type: "select", required: true },
   };

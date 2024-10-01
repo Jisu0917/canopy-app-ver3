@@ -1,17 +1,26 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { LocationModel } from "@/types/models";
 
 export async function POST(request: Request) {
   try {
-    const {
-      data: { region, address },
-    }: Omit<LocationModel, "id" | "canopies"> = await request.json();
-    await prisma.location.create({
-      data: { region: region as string, address: address as string },
-    });
+    const { data } = await request.json();
+    const response = await fetch(
+      `${process.env.SERVER_URL}/api/location/create`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
 
-    return NextResponse.redirect("/location");
+    if (!response.ok) {
+      throw new Error("Failed to create location");
+    }
+
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/database/location`
+    );
   } catch (err) {
     console.error("Error adding location:", err);
     return NextResponse.json(

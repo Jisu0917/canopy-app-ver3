@@ -11,6 +11,19 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const app = express();
 app.use(cors());
 
+import adminRoutes from "./routes/adminRoutes";
+import buyerRoutes from "./routes/buyerRoutes";
+import canopyRoutes from "./routes/canopyRoutes";
+import controlRoutes from "./routes/controlRoutes";
+import locationRoutes from "./routes/locationRoutes";
+
+app.use(express.json());
+app.use("/api/admin", adminRoutes);
+app.use("/api/buyer", buyerRoutes);
+app.use("/api/canopy", canopyRoutes);
+app.use("/api/control", controlRoutes);
+app.use("/api/location", locationRoutes);
+
 const server = http.createServer(app);
 
 const allowedHeaders =

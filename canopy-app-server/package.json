@@ -8,11 +8,14 @@
     "serve": "node dist/socketio-server.js"
   },
   "dependencies": {
-    "@prisma/client": "^5.19.1",
+    "@prisma/client": "^5.20.0",
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.21.0",
     "mysql2": "^3.11.3",
+    "prisma": "^5.20.0",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.8.0"
   },

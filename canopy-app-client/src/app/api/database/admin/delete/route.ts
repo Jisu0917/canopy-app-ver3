@@ -1,20 +1,28 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id"); // 쿼리 파라미터에서 id 추출
+  const id = searchParams.get("id");
 
   if (!id || isNaN(parseInt(id))) {
     return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   }
 
   try {
-    await prisma.admin.delete({
-      where: { id: parseInt(id) },
-    });
-    return NextResponse.json({ message: "Admin deleted" });
+    const response = await fetch(
+      `${process.env.SERVER_URL}/api/admin/delete/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to delete admin");
+    }
+
+    return NextResponse.json(await response.json());
   } catch (error) {
+    console.error("Error deleting admin:", error);
     return NextResponse.json(
       { error: "Failed to delete admin" },
       { status: 500 }

@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const {
-      id,
-      data: { user_id, name, password },
-    } = await req.json();
+    const { id, data } = await req.json();
 
     if (!id) {
       return NextResponse.json(
@@ -16,26 +11,22 @@ export async function POST(req: Request) {
       );
     }
 
-    // 업데이트할 데이터 객체 초기화
-    const updateData: {
-      user_id?: string;
-      name?: string;
-      password?: string;
-    } = { user_id, name };
+    const response = await fetch(
+      `${process.env.SERVER_URL}/api/admin/update/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
 
-    if (password && password.trim() !== "") {
-      // 비밀번호가 제공된 경우에만 해싱하여 추가
-      const hashedPassword = await bcrypt.hash(password, 10);
-      updateData.password = hashedPassword;
+    if (!response.ok) {
+      throw new Error("Failed to update admin");
     }
 
-    // 관리자 정보 업데이트
-    const updatedAdmin = await prisma.admin.update({
-      where: { id },
-      data: updateData,
-    });
-
-    return NextResponse.json(updatedAdmin, { status: 200 });
+    return NextResponse.json(await response.json());
   } catch (error) {
     console.error("Error handling admin request:", error);
     return NextResponse.json(

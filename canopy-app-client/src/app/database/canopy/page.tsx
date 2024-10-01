@@ -60,8 +60,8 @@ const CanopyPage: React.FC = () => {
   };
 
   const relatedFields = {
-    region: { label: "관할 구역", type: "select", required: true },
-    supervisor_name: { label: "담당자 성함", type: "select", required: true },
+    region: { label: "관할 구역", type: "text", required: true },
+    supervisor_name: { label: "담당자 성함", type: "text", required: true },
   };
 
   return (

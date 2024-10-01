@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    const {
-      id,
-      data: { region, address },
-    } = await request.json();
+    const { id, data } = await request.json();
 
     if (!id) {
       return NextResponse.json(
@@ -15,22 +11,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // 업데이트할 데이터 객체 초기화
-    const updateData: {
-      region: string;
-      address: string;
-    } = {
-      region,
-      address,
-    };
+    const response = await fetch(
+      `${process.env.SERVER_URL}/api/location/update/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
 
-    // 위치 정보 업데이트
-    const updatedLocation = await prisma.location.update({
-      where: { id },
-      data: updateData,
-    });
+    if (!response.ok) {
+      throw new Error("Failed to update location");
+    }
 
-    return NextResponse.json(updatedLocation, { status: 200 });
+    return NextResponse.json(await response.json());
   } catch (error) {
     console.error("Error handling location request:", error);
     return NextResponse.json(

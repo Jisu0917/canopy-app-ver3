@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { CanopyModel } from "@/types/models";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -14,35 +12,16 @@ export async function GET(request: Request) {
   }
 
   try {
-    const canopies = await prisma.canopy.findMany({
-      where: {
-        buyer_id: parseInt(buyerId),
-      },
-      include: {
-        location: true,
-        buyer: true,
-      },
-    });
-
-    const data: CanopyModel[] = canopies.map(
-      ({ id, location, buyer, ...rest }) => ({
-        id,
-        data: {
-          id,
-          ...rest,
-          location: {
-            ...location,
-          },
-          buyer: buyer
-            ? {
-                ...buyer,
-              }
-            : undefined,
-        },
-      })
+    const response = await fetch(
+      `${process.env.SERVER_URL}/api/canopy/show/buyer/${buyerId}`
     );
 
-    return NextResponse.json({ data });
+    if (!response.ok) {
+      throw new Error("Failed to fetch buyer canopies");
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Error fetching buyer canopies:", error);
     return NextResponse.json(
